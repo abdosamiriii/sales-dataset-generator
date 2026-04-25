@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>مولّد Dataset المبيعات | Abdelrahman Samir</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090f;--surface:rgba(13,18,30,0.92);--border:rgba(255,255,255,0.06);
+  --text:#e8edf5;--muted:#4a5568;--accent:#5b6ef5;--accent2:#7c3aed;
+  --green:#34d399;--yellow:#fbbf24;--red:#f87171;--li:#0a66c2;
+  --glow-accent:rgba(91,110,245,0.18);
+}
+body{min-height:100vh;background:var(--bg);font-family:'Cairo',sans-serif;color:var(--text);padding:36px 16px 72px;direction:rtl;overflow-x:hidden;position:relative}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(91,110,245,0.08),transparent),radial-gradient(ellipse 60% 40% at 90% 80%,rgba(124,58,237,0.06),transparent);pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0}
+
+.wrap{max-width:740px;margin:0 auto;position:relative;z-index:1}
+
+/* HEADER */
+.badge{display:inline-flex;align-items:center;gap:8px;background:rgba(91,110,245,0.1);border:1px solid rgba(91,110,245,0.25);border-radius:50px;padding:6px 20px;margin-bottom:20px;font-size:10px;color:#818cf8;letter-spacing:3px;text-transform:uppercase;animation:fadeDown .6s ease both}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:#818cf8;animation:breathe 2s ease-in-out infinite}
+h1{font-size:clamp(28px,5vw,46px);font-weight:900;margin-bottom:12px;background:linear-gradient(135deg,#fff 0%,#a5b4fc 60%,#7c3aed 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.15;animation:fadeDown .7s ease both}
+.subtitle{color:var(--muted);font-size:14px;line-height:1.8;margin-bottom:40px;animation:fadeDown .8s ease both}
+.header-wrap{text-align:center}
+
+/* CARD */
+.card{background:var(--surface);backdrop-filter:blur(24px);border:1px solid var(--border);border-radius:22px;padding:32px 28px;margin-bottom:20px;box-shadow:0 30px 70px rgba(0,0,0,0.6);animation:fadeUp .6s ease both .15s}
+
+/* FIELD */
+.field-label{display:flex;align-items:center;gap:9px;font-size:12px;font-weight:700;color:#7986a3;margin-bottom:10px;letter-spacing:.8px;text-transform:uppercase}
+.licon{width:24px;height:24px;border-radius:7px;background:rgba(91,110,245,0.15);display:grid;place-items:center;font-size:13px;flex-shrink:0}
+.field-wrap{margin-bottom:26px}
+
+/* INPUT */
+input[type=text]{width:100%;padding:14px 18px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:13px;color:var(--text);font-size:15px;outline:none;font-family:'Cairo',sans-serif;direction:rtl;transition:border-color .2s,box-shadow .2s}
+input[type=text]:focus{border-color:rgba(91,110,245,.5);box-shadow:0 0 0 3px rgba(91,110,245,.08)}
+input[type=text]::placeholder{color:#2d3748}
+.hint{font-size:11px;color:var(--muted);margin-top:7px}
+
+/* INLINE ROW BUTTONS inside level cards */
+.lrows-wrap{display:none;gap:6px;flex-wrap:wrap;margin-top:8px}
+.lcard.on-g .lrows-wrap,.lcard.on-y .lrows-wrap,.lcard.on-r .lrows-wrap{display:flex}
+.lrow-btn{padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:#4a5568;font-size:11px;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;transition:all .18s;white-space:nowrap}
+.lrow-btn:hover{border-color:rgba(255,255,255,0.2);color:#94a3b8}
+.lrow-btn.on{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.25);color:#e8edf5}
+
+/* LEVEL CARDS */
+.levels{display:flex;flex-direction:column;gap:10px}
+.lcard{padding:14px 18px;border-radius:13px;border:1.5px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:space-between;user-select:none}
+.lcard:hover{border-color:rgba(255,255,255,0.13)}
+.lcard.on-g{border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.07);box-shadow:0 0 22px rgba(52,211,153,.08)}
+.lcard.on-y{border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.07);box-shadow:0 0 22px rgba(251,191,36,.08)}
+.lcard.on-r{border-color:rgba(248,113,113,.35);background:rgba(248,113,113,.07);box-shadow:0 0 22px rgba(248,113,113,.08)}
+.lcard-left{display:flex;align-items:center;gap:12px}
+.radio{width:18px;height:18px;border-radius:50%;border:2px solid #2d3748;display:grid;place-items:center;transition:border-color .2s;flex-shrink:0}
+.rdot{width:8px;height:8px;border-radius:50%;display:none}
+.lname{font-weight:700;font-size:14px;transition:color .2s}
+.lname-en{font-size:11px;color:var(--muted);font-weight:400;margin-right:6px}
+.ldesc{font-size:11px;color:var(--muted);margin-top:2px}
+.lbadge{font-size:10px;font-weight:700;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:6px;padding:3px 10px;white-space:nowrap;transition:all .2s}
+
+/* TAGS */
+.tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:24px}
+.tag{font-size:11px;color:#4a5568;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:6px;padding:4px 10px}
+
+/* PROGRESS BAR */
+.progress-wrap{display:none;margin-bottom:0;margin-top:16px}
+.progress-bar-bg{height:4px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width .3s ease;border-radius:4px}
+.progress-label{font-size:11px;color:var(--muted);margin-top:8px;text-align:center}
+
+/* BTN */
+.btn-gen{width:100%;padding:16px;background:linear-gradient(135deg,#5b6ef5,#7c3aed);border:1px solid rgba(91,110,245,.5);border-radius:13px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Cairo',sans-serif;box-shadow:0 4px 24px rgba(91,110,245,.28);letter-spacing:.5px;margin-top:4px}
+.btn-gen:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 32px rgba(91,110,245,.4)}
+.btn-gen:disabled{background:rgba(91,110,245,.1);border-color:rgba(91,110,245,.15);color:#2d3748;cursor:not-allowed;box-shadow:none;transform:none}
+
+/* ERROR */
+.errbox{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:13px;padding:14px 18px;margin-bottom:18px;color:#fca5a5;font-size:13px;text-align:center;display:none}
+
+/* RESULT */
+.result-card{background:rgba(13,18,30,0.95);backdrop-filter:blur(24px);border-radius:22px;overflow:hidden;margin-bottom:24px;display:none;animation:fadeUp .4s ease both}
+.result-head{background:rgba(255,255,255,0.025);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.05);flex-wrap:wrap;gap:8px}
+.result-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700}
+.rdot2{width:8px;height:8px;border-radius:50%}
+.result-meta{font-size:11px;color:var(--muted)}
+
+/* PREVIEW TABLE */
+.tbl-wrap{overflow-x:auto;max-height:300px;overflow-y:auto}
+.tbl-wrap::-webkit-scrollbar{height:4px;width:4px}
+.tbl-wrap::-webkit-scrollbar-thumb{background:#1a2035;border-radius:4px}
+table{width:100%;border-collapse:collapse;font-size:11px;direction:ltr;font-family:'Fira Code',monospace}
+th{background:rgba(91,110,245,0.12);color:#818cf8;padding:8px 13px;text-align:left;white-space:nowrap;font-weight:600;border-bottom:1px solid rgba(255,255,255,0.07);position:sticky;top:0;z-index:2}
+td{padding:7px 13px;color:#94a3b8;border-bottom:1px solid rgba(255,255,255,0.03);white-space:nowrap}
+tr:hover td{background:rgba(255,255,255,0.015)}
+.nc{color:#ef4444!important;font-style:italic}
+.more-rows{padding:10px 16px;font-size:11px;color:var(--muted);text-align:center;border-top:1px solid rgba(255,255,255,0.04)}
+
+/* ACTIONS */
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 20px;border-top:1px solid rgba(255,255,255,0.05)}
+.btn-act{padding:12px;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;transition:all .2s;border:1px solid}
+.btn-copy{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.09);color:#94a3b8}
+.btn-copy.ok{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.4);color:#34d399}
+.btn-dl{font-size:13px;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;transition:all .2s;border-radius:11px;padding:12px;border:1px solid}
+
+/* INSTRUCTIONS */
+.inst{background:rgba(13,18,30,.7);border:1px solid rgba(255,255,255,0.05);border-radius:15px;padding:18px 22px;margin-bottom:24px}
+.inst-title{font-size:11px;font-weight:700;color:#3d4a63;margin-bottom:12px;letter-spacing:1.5px;text-transform:uppercase}
+.inst-row{display:flex;align-items:flex-start;gap:10px;font-size:12px;margin-bottom:7px}
+.itool{background:rgba(91,110,245,.14);color:#818cf8;padding:2px 9px;border-radius:5px;font-weight:700;min-width:82px;text-align:center;white-space:nowrap;flex-shrink:0;margin-top:1px}
+.istep{color:var(--muted);line-height:1.6}
+
+/* LINKEDIN */
+.li-card{background:linear-gradient(135deg,rgba(10,102,194,.14),rgba(10,102,194,.04));border:1px solid rgba(10,102,194,.28);border-radius:17px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;box-shadow:0 0 32px rgba(10,102,194,.08)}
+.li-left{display:flex;align-items:center;gap:14px}
+.li-logo{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#0a66c2,#004182);display:grid;place-items:center;box-shadow:0 4px 16px rgba(10,102,194,.4);flex-shrink:0}
+.li-name{font-weight:800;font-size:14px;margin-bottom:3px}
+.li-role{font-size:11px;color:var(--muted)}
+.btn-li{padding:10px 22px;background:linear-gradient(135deg,#0a66c2,#004182);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;text-decoration:none;box-shadow:0 4px 16px rgba(10,102,194,.38);transition:all .2s;white-space:nowrap;font-family:'Cairo',sans-serif;display:inline-block}
+.btn-li:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(10,102,194,.5)}
+.footer{text-align:center;font-size:11px;color:#141b2a;margin-top:20px}
+
+/* SPINNER */
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:rotate .7s linear infinite;vertical-align:middle;margin-left:7px}
+
+/* ANIMATIONS */
+@keyframes fadeDown{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes breathe{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}}
+@keyframes rotate{to{transform:rotate(360deg)}}
+
+@media(max-width:520px){.card{padding:22px 16px}.actions{grid-template-columns:1fr}.li-card{flex-direction:column;align-items:flex-start}.btn-li{width:100%;text-align:center}.row-options{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HEADER -->
+<div class="header-wrap">
+  <div class="badge"><div class="badge-dot"></div>Sales Dataset Generator — No API Required</div>
+  <h1>مولّد Dataset المبيعات</h1>
+  <p class="subtitle">أدخل اسم الشركة · اختر مستوى البيانات وعدد الصفوف<br/>احصل على CSV احترافي جاهز لـ Power BI & Excel — مجاناً وفورياً</p>
+</div>
+
+<!-- FORM CARD -->
+<div class="card">
+
+  <!-- Company -->
+  <div class="field-wrap">
+    <div class="field-label"><div class="licon">🏢</div>اسم الشركة</div>
+    <input type="text" id="companyInput" placeholder="مثال: Circle K · Vodafone · Pepsi · Carrefour · McDonald's ..."/>
+    <p class="hint">اكتب أي شركة — سيتم توليد بيانات تعكس نشاطها الحقيقي</p>
+  </div>
+
+  <!-- Level + Rows combined -->
+  <div class="field-wrap" style="margin-bottom:20px">
+    <div class="field-label"><div class="licon">📊</div>مستوى البيانات</div>
+    <div class="levels" id="levelsWrap">
+
+      <div class="lcard on-g" data-lv="beginner" onclick="setLv('beginner')">
+        <div class="lcard-left">
+          <div class="radio" id="r-beginner" style="border-color:#34d399"><div class="rdot" id="d-beginner" style="background:#34d399;display:block"></div></div>
+          <div>
+            <div class="lname" style="color:#34d399">🟢 مبتدئ <span class="lname-en">(Beginner)</span></div>
+            <div class="ldesc">10 أعمدة · بيانات بسيطة · Data Cleaning أساسي</div>
+            <div class="lrows-wrap" id="rows-beginner">
+              <button class="lrow-btn on" data-lv="beginner" data-rows="50" onclick="pickRows(event,'beginner',50)">50</button>
+              <button class="lrow-btn" data-lv="beginner" data-rows="200" onclick="pickRows(event,'beginner',200)">200</button>
+              <button class="lrow-btn" data-lv="beginner" data-rows="500" onclick="pickRows(event,'beginner',500)">500</button>
+              <button class="lrow-btn" data-lv="beginner" data-rows="1000" onclick="pickRows(event,'beginner',1000)">1,000</button>
+            </div>
+          </div>
+        </div>
+        <div class="lbadge" id="lb-beginner" style="color:#34d399;border-color:rgba(52,211,153,.3)">50 صف</div>
+      </div>
+
+      <div class="lcard" data-lv="intermediate" onclick="setLv('intermediate')">
+        <div class="lcard-left">
+          <div class="radio" id="r-intermediate"><div class="rdot" id="d-intermediate" style="background:#fbbf24"></div></div>
+          <div>
+            <div class="lname">🟡 متوسط <span class="lname-en">(Intermediate)</span></div>
+            <div class="ldesc">20 عمود · خصومات + مناطق + موسمية + أخطاء مخفية</div>
+            <div class="lrows-wrap" id="rows-intermediate">
+              <button class="lrow-btn" data-lv="intermediate" data-rows="500" onclick="pickRows(event,'intermediate',500)">500</button>
+              <button class="lrow-btn on" data-lv="intermediate" data-rows="1000" onclick="pickRows(event,'intermediate',1000)">1,000</button>
+              <button class="lrow-btn" data-lv="intermediate" data-rows="5000" onclick="pickRows(event,'intermediate',5000)">5,000</button>
+              <button class="lrow-btn" data-lv="intermediate" data-rows="10000" onclick="pickRows(event,'intermediate',10000)">10,000</button>
+            </div>
+          </div>
+        </div>
+        <div class="lbadge" id="lb-intermediate">1,000 صف</div>
+      </div>
+
+      <div class="lcard" data-lv="advanced" onclick="setLv('advanced')">
+        <div class="lcard-left">
+          <div class="radio" id="r-advanced"><div class="rdot" id="d-advanced" style="background:#f87171"></div></div>
+          <div>
+            <div class="lname">🔴 متقدم <span class="lname-en">(Advanced)</span></div>
+            <div class="ldesc">40+ عمود · Power BI Ready · إحصاءات Pareto · كل أنواع الأخطاء</div>
+            <div class="lrows-wrap" id="rows-advanced">
+              <button class="lrow-btn" data-lv="advanced" data-rows="5000" onclick="pickRows(event,'advanced',5000)">5,000</button>
+              <button class="lrow-btn on" data-lv="advanced" data-rows="10000" onclick="pickRows(event,'advanced',10000)">10,000</button>
+              <button class="lrow-btn" data-lv="advanced" data-rows="20000" onclick="pickRows(event,'advanced',20000)">20,000</button>
+            </div>
+          </div>
+        </div>
+        <div class="lbadge" id="lb-advanced">10,000 صف</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Tags -->
+  <div class="tags">
+    <span class="tag">✅ 100% Client-Side</span>
+    <span class="tag">✅ بدون API Key</span>
+    <span class="tag">✅ بيانات واقعية للشركة</span>
+    <span class="tag">✅ Power BI & Excel Ready</span>
+    <span class="tag">✅ Data Cleaning مضمّن</span>
+    <span class="tag">✅ Preview قبل التحميل</span>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel">جاري توليد البيانات...</div>
+  </div>
+
+  <button class="btn-gen" id="genBtn" onclick="generate()">🚀 ولّد الـ Dataset الآن</button>
+</div>
+
+<!-- ERROR -->
+<div class="errbox" id="errBox"></div>
+
+<!-- RESULT -->
+<div class="result-card" id="resultCard">
+  <div class="result-head">
+    <div class="result-title"><div class="rdot2" id="rdot2"></div><span id="rTitle">Dataset جاهز</span></div>
+    <div class="result-meta" id="rMeta"></div>
+  </div>
+  <div class="tbl-wrap" id="tblWrap"></div>
+  <div class="more-rows" id="moreRows" style="display:none"></div>
+  <div class="actions">
+    <button class="btn-act btn-copy" id="copyBtn" onclick="copyCSV()">📋 نسخ CSV</button>
+    <button class="btn-act btn-dl" id="dlBtn" onclick="dlCSV()">⬇️ تحميل .csv</button>
+  </div>
+</div>
+
+<!-- INSTRUCTIONS -->
+<div class="inst">
+  <div class="inst-title">📌 كيفية الاستخدام</div>
+  <div class="inst-row"><span class="itool">Excel</span><span class="istep">Data → From Text/CSV → اختر الملف → Transform Data (Power Query)</span></div>
+  <div class="inst-row"><span class="itool">Power BI</span><span class="istep">Get Data → Text/CSV → اختر الملف → Transform Data</span></div>
+  <div class="inst-row"><span class="itool">تنظيف</span><span class="istep">ابحث عن الخلايا الفارغة (NULL)، التواريخ المختلطة، والأرقام السالبة — كلها مقصودة للتدريب</span></div>
+</div>
+
+<!-- LINKEDIN -->
+<div class="li-card">
+  <div class="li-left">
+    <div class="li-logo">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+    </div>
+    <div>
+      <div class="li-name">Abdelrahman Samir</div>
+      <div class="li-role">Junior Data Analyst</div>
+    </div>
+  </div>
+  <a class="btn-li" href="https://www.linkedin.com/in/abdelrahman-samir-088164332" target="_blank" rel="noopener noreferrer">تواصل معي 🔗</a>
+</div>
+<p class="footer">Built by Abdelrahman Samir · 100% Client-Side · No API Required</p>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────
+let selInd = 'retail', selRows = 50, selLv = 'beginner', csvData = '';
+
+const lvCfg = {
+  beginner:     {color:'#34d399',glow:'rgba(52,211,153,.1)', border:'rgba(52,211,153,.35)', cls:'on-g', defaultRows:50},
+  intermediate: {color:'#fbbf24',glow:'rgba(251,191,36,.1)', border:'rgba(251,191,36,.35)', cls:'on-y', defaultRows:1000},
+  advanced:     {color:'#f87171',glow:'rgba(248,113,113,.1)',border:'rgba(248,113,113,.35)',cls:'on-r', defaultRows:10000},
+};
+
+const rowHints = {
+  50:'سيتم توليد 50 صف — مناسب للتدريب الأساسي',
+  200:'سيتم توليد 200 صف — مناسب لـ Power Query',
+  500:'سيتم توليد 500 صف — مناسب لـ Power BI',
+  1000:'سيتم توليد 1,000 صف — مستوى احترافي',
+  5000:'سيتم توليد 5,000 صف — بيانات ضخمة',
+  10000:'سيتم توليد 10,000 صف — Enterprise Level',
+  20000:'سيتم توليد 20,000 صف — قد يستغرق لحظات',
+};
+
+// ─── COMPANY KNOWLEDGE BASE ──────────────────────────────
+const companyDB = {
+  // RETAIL / CONVENIENCE
+  'circle k':    {ind:'retail', country:'Egypt', currency:'EGP', stores:['Maadi','Nasr City','Heliopolis','New Cairo','6th October','Zamalek','Dokki','Rehab','Sheikh Zayed','Mohandessin'], products:[['Coca-Cola 250ml Can','Beverages','Soft Drinks','Coca-Cola',12],['Pepsi 250ml Can','Beverages','Soft Drinks','Pepsi',11],['Sprite 250ml Can','Beverages','Soft Drinks','Sprite',11],['Aquafina 600ml','Beverages','Water','Aquafina',7],['Baraka Water 1.5L','Beverages','Water','Baraka',10],['Red Bull 250ml','Beverages','Energy Drinks','Red Bull',35],['Monster Energy 500ml','Beverages','Energy Drinks','Monster',40],['Nescafe Classic Sachet','Hot Drinks','Coffee','Nescafe',8],['Chipsy Cheese 65g','Snacks','Chips','Chipsy',15],['Chipsy Ketchup 65g','Snacks','Chips','Chipsy',15],['Doritos Nacho 70g','Snacks','Chips','Doritos',20],['Twix Bar','Snacks','Chocolate','Mars',18],['KitKat 4F','Snacks','Chocolate','Nestle',16],['Pringles Original 165g','Snacks','Chips','Pringles',55],['Marlboro Red Box','Tobacco','Cigarettes','Philip Morris',75],['Cleopatra Soft','Tobacco','Cigarettes','Eastern Co',28],['Vodafone 10 EGP Recharge','Telecom','Recharge','Vodafone',10],['Juhayna Full Cream 1L','Dairy','Milk','Juhayna',28],['Almarai Cheese Slices','Dairy','Cheese','Almarai',35],['Snickers Bar','Snacks','Chocolate','Mars',18]]},
+  'carrefour':   {ind:'retail', country:'Egypt', currency:'EGP', stores:['City Stars','Mall of Arabia','Mall of Egypt','Maadi','Heliopolis','Alexandria San Stefano'], products:[['Samsung 65" TV','Electronics','TVs','Samsung',15999],['iPhone 15 128GB','Electronics','Smartphones','Apple',35000],['Ariel Washing Powder 4kg','Household','Detergents','Ariel',189],['Pedigree Dog Food 3kg','Pet Care','Dog Food','Pedigree',320],['Nescafe 3in1 Box','Hot Drinks','Coffee','Nescafe',145],['Fairy Dish Soap 750ml','Household','Cleaning','Fairy',42],['Baygon Spray 400ml','Household','Pest Control','Baygon',65],['Dove Shampoo 400ml','Personal Care','Hair','Dove',85],['Pampers Baby Dry S3','Baby','Diapers','Pampers',210],['Heinz Ketchup 570g','Food','Condiments','Heinz',78],['Philadelphia Cream Cheese','Dairy','Cheese','Philadelphia',89],['Tropicana Orange 1L','Beverages','Juice','Tropicana',55],['Uncle Ben\'s Rice 1kg','Food','Grains','Uncle Ben\'s',95],['Pringles Sour Cream 165g','Snacks','Chips','Pringles',65],['Lipton Yellow Label 100 bags','Hot Drinks','Tea','Lipton',89]]},
+  'bim':         {ind:'retail', country:'Egypt', currency:'EGP', stores:['Nasr City','Maadi','Heliopolis','Dokki','Mohandessin','Alexandria','Mansoura'], products:[['BIM Pasta 500g','Food','Pasta','BIM Brand',12],['BIM Sunflower Oil 1L','Food','Oils','BIM Brand',55],['BIM Sugar 1kg','Food','Sugar','BIM Brand',35],['BIM Rice 2kg','Food','Grains','BIM Brand',65],['Tomato Paste 130g','Food','Condiments','BIM Brand',8],['BIM Biscuits Chocolate','Snacks','Biscuits','BIM Brand',15],['Laundry Powder 3kg','Household','Detergents','BIM Brand',125],['Dish Soap 500ml','Household','Cleaning','BIM Brand',22],['UHT Milk 1L','Dairy','Milk','BIM Brand',32],['Canned Tuna 180g','Food','Canned','BIM Brand',28]]},
+
+  // F&B
+  'mcdonald\'s': {ind:'fnb', country:'Egypt', currency:'EGP', stores:['City Stars','Mall of Arabia','Maadi','Nasr City','Heliopolis','New Cairo','Alexandria','6th October'], products:[['Big Mac Meal','Burgers','Meal Deals','McDonald\'s',155],['McChicken Meal','Chicken','Meal Deals','McDonald\'s',135],['Quarter Pounder Meal','Burgers','Meal Deals','McDonald\'s',165],['McFalafel','Local Menu','Sandwiches','McDonald\'s',45],['McNuggets 9pc','Chicken','Nuggets','McDonald\'s',115],['Large Fries','Sides','Fries','McDonald\'s',52],['McFlurry Oreo','Desserts','Ice Cream','McDonald\'s',65],['Filet-O-Fish Meal','Fish','Meal Deals','McDonald\'s',145],['Happy Meal Chicken','Kids','Meal Deals','McDonald\'s',95],['Coca-Cola Large','Beverages','Soft Drinks','McDonald\'s',35],['McCafe Latte','Beverages','Coffee','McDonald\'s',75],['Apple Pie','Desserts','Pastry','McDonald\'s',35]]},
+  'kfc':         {ind:'fnb', country:'Egypt', currency:'EGP', stores:['City Stars','Nasr City','Maadi','Heliopolis','Mall of Egypt','Alexandria','New Cairo'], products:[['Zinger Burger Meal','Chicken','Meal Deals','KFC',165],['Original 3 Pcs Meal','Chicken','Bucket Meals','KFC',175],['Streetwise 5','Chicken','Box Meals','KFC',145],['Twister Wrap Meal','Chicken','Wrap Meals','KFC',155],['Popcorn Chicken Large','Chicken','Snacks','KFC',75],['Coleslaw','Sides','Salads','KFC',35],['Mashed Potato','Sides','Potato','KFC',32],['Pepsi Large','Beverages','Soft Drinks','KFC',30],['Chocolate Molten Cake','Desserts','Cakes','KFC',55],['Hot Wings 6pcs','Chicken','Wings','KFC',95]]},
+  'pizza hut':   {ind:'fnb', country:'Egypt', currency:'EGP', stores:['City Stars','Maadi','Heliopolis','New Cairo','6th October','Alexandria'], products:[['Pepperoni Pizza Large','Pizza','Meat Pizza','Pizza Hut',220],['Margherita Pizza Medium','Pizza','Classic','Pizza Hut',165],['BBQ Chicken Pizza Large','Pizza','Chicken Pizza','Pizza Hut',235],['Pasta Arabiata','Pasta','Classic','Pizza Hut',95],['Garlic Bread','Sides','Bread','Pizza Hut',55],['Chicken Wings 8pcs','Sides','Wings','Pizza Hut',125],['Pepsi 1.5L','Beverages','Soft Drinks','Pizza Hut',45],['Chocolate Brownie','Desserts','Cake','Pizza Hut',75]]},
+  'hardee\'s':   {ind:'fnb', country:'Egypt', currency:'EGP', stores:['Nasr City','Maadi','Heliopolis','New Cairo','Zamalek'], products:[['Thickburger Meal','Burgers','Meal Deals','Hardee\'s',175],['Mushroom Swiss Meal','Burgers','Meal Deals','Hardee\'s',185],['Chicken Stars','Chicken','Snacks','Hardee\'s',85],['Natural Cut Fries Large','Sides','Fries','Hardee\'s',55],['Hand-Scooped Ice Cream','Desserts','Ice Cream','Hardee\'s',65]]},
+
+  // TELECOM
+  'vodafone':    {ind:'telecom', country:'Egypt', currency:'EGP', stores:['Vodafone Maadi','Vodafone Nasr City','Vodafone Heliopolis','Vodafone Zamalek','Vodafone New Cairo','Vodafone Mohandessin'], products:[['Prepaid SIM Card','SIM Cards','Prepaid','Vodafone',10],['Data Bundle 1GB Daily','Data Bundles','Daily','Vodafone',15],['Data Bundle 5GB Weekly','Data Bundles','Weekly','Vodafone',50],['Data Bundle 20GB Monthly','Data Bundles','Monthly','Vodafone',150],['Supreme 150 Bundle','Voice+Data','Monthly','Vodafone',350],['International Call Pack','Voice Bundles','International','Vodafone',80],['Recharge 10 EGP','Recharge','Low Value','Vodafone',10],['Recharge 50 EGP','Recharge','Mid Value','Vodafone',50],['Recharge 100 EGP','Recharge','High Value','Vodafone',100],['USB-C Cable 1m','Accessories','Cables','Vodafone',65],['Screen Protector','Accessories','Protection','Vodafone',80],['Phone Case iPhone','Accessories','Cases','Vodafone',120]]},
+  'orange':      {ind:'telecom', country:'Egypt', currency:'EGP', stores:['Orange Maadi','Orange Nasr City','Orange Heliopolis','Orange Mohandessin','Orange New Cairo'], products:[['Orange SIM Card','SIM Cards','Prepaid','Orange',10],['Data 2GB Daily','Data Bundles','Daily','Orange',20],['Data 10GB Weekly','Data Bundles','Weekly','Orange',65],['Orange Red Bundle','Voice+Data','Monthly','Orange',299],['International Pack','Voice Bundles','International','Orange',90],['Recharge 15 EGP','Recharge','Mid','Orange',15],['Recharge 100 EGP','Recharge','High','Orange',100],['Power Bank 10000mAh','Accessories','Power','Orange',350]]},
+  'etisalat':    {ind:'telecom', country:'Egypt', currency:'EGP', stores:['Etisalat Maadi','Etisalat Nasr City','Etisalat Heliopolis','Etisalat New Cairo'], products:[['eLife SIM Card','SIM Cards','Prepaid','Etisalat',10],['Data 3GB Daily','Data Bundles','Daily','Etisalat',22],['Data 15GB Monthly','Data Bundles','Monthly','Etisalat',120],['Freedom Bundle','Voice+Data','Monthly','Etisalat',280],['Recharge 20 EGP','Recharge','Low','Etisalat',20],['Recharge 200 EGP','Recharge','High','Etisalat',200]]},
+
+  // PHARMACY
+  'el ezaby':    {ind:'pharmacy', country:'Egypt', currency:'EGP', stores:['El Ezaby Maadi','El Ezaby Nasr City','El Ezaby Heliopolis','El Ezaby New Cairo','El Ezaby Zamalek','El Ezaby Dokki'], products:[['Panadol Extra 500mg x24','Pain Relief','Paracetamol','GSK',28],['Brufen 400mg x20','Pain Relief','Ibuprofen','Abbott',35],['Antinal 200mg x12','GI','Antidiarrheal','Pharco',22],['Vitamin C 1000mg x30','Vitamins','Vitamin C','EVA Pharma',85],['Omega-3 1000mg x30','Vitamins','Omega-3','Pharco',120],['Dettol 500ml','Antiseptics','Liquid','Dettol',65],['Concor 5mg x30','Cardiovascular','Beta Blockers','Merck',95],['Glucophage 500mg x30','Diabetes','Metformin','Merck',28],['Ventolin Inhaler','Respiratory','Bronchodilator','GSK',75],['Claritin 10mg x10','Allergy','Antihistamine','Bayer',55],['Catafast Sachets x10','Pain Relief','Diclofenac','Novartis',45],['Band-Aid Classic x20','First Aid','Bandages','J&J',35]]},
+  'seif pharmacy':{ind:'pharmacy', country:'Egypt', currency:'EGP', stores:['Seif Zamalek','Seif Mohandessin','Seif Heliopolis','Seif Nasr City','Seif Maadi'], products:[['Panadol Extra 500mg x24','Pain Relief','Paracetamol','GSK',28],['Brufen 400mg x20','Pain Relief','Ibuprofen','Abbott',35],['Antinal 200mg x12','GI','Antidiarrheal','Pharco',22],['Vitamin C 1000mg x30','Vitamins','Vitamin C','EVA Pharma',85],['Concor 5mg x30','Cardiovascular','Beta Blockers','Merck',95],['Ventolin Inhaler','Respiratory','Bronchodilator','GSK',75],['Nicorette Gum 2mg x30','Smoking Cessation','NRT','Nicorette',185],['Centrum Silver x30','Vitamins','Multivitamin','Centrum',220]]},
+
+  // FASHION
+  'zara':        {ind:'fashion', country:'Egypt', currency:'EGP', stores:['Zara City Stars','Zara Mall of Arabia','Zara Mall of Egypt','Zara San Stefano Alex'], products:[['Classic White Shirt M','Tops','Shirts','Zara',895],['Slim Fit Jeans Blue 32','Bottoms','Jeans','Zara',1295],['Floral Midi Dress S','Dresses','Midi','Zara',1495],['Leather Jacket M','Outerwear','Jackets','Zara',2995],['Sneakers White 42','Footwear','Sneakers','Zara',1695],['Tote Bag Black','Bags','Tote','Zara',895],['Wool Coat L','Outerwear','Coats','Zara',3495],['Striped T-Shirt M','Tops','T-Shirts','Zara',595],['High Waist Trousers S','Bottoms','Trousers','Zara',1095],['Denim Jacket M','Outerwear','Denim','Zara',1595]]},
+  'h&m':         {ind:'fashion', country:'Egypt', currency:'EGP', stores:['H&M City Stars','H&M Maadi','H&M Mohandessin','H&M New Cairo Mall'], products:[['Basic T-Shirt M','Tops','T-Shirts','H&M',199],['Slim Jeans 32','Bottoms','Jeans','H&M',549],['Summer Dress S','Dresses','Summer','H&M',399],['Hoodie Grey L','Tops','Hoodies','H&M',449],['Sneakers White 42','Footwear','Sneakers','H&M',799],['Baseball Cap','Accessories','Hats','H&M',149],['Sports Shorts M','Activewear','Shorts','H&M',249],['Linen Shirt White M','Tops','Shirts','H&M',349],['Canvas Backpack','Bags','Backpacks','H&M',499],['Bikini Set S','Swimwear','Bikini','H&M',599]]},
+
+  // E-COMMERCE
+  'amazon egypt':{ind:'ecommerce', country:'Egypt', currency:'EGP', stores:['Online - Cairo','Online - Giza','Online - Alexandria','Online - Mansoura'], products:[['Anker PowerCore 20000mAh','Electronics','Power Banks','Anker',650],['JBL Clip 4 Speaker','Electronics','Speakers','JBL',1199],['Kindle Paperwhite','Electronics','E-Readers','Amazon',2799],['Fire TV Stick 4K','Electronics','Streaming','Amazon',1299],['Samsung 65" TV','Electronics','TVs','Samsung',18999],['Lego Classic Box','Toys','Building','Lego',850],['Nike Air Max 42','Footwear','Sneakers','Nike',3499],['Adidas T-Shirt M','Tops','T-Shirts','Adidas',599],['Dyson V12 Vacuum','Home','Vacuums','Dyson',9999],['Nespresso Vertuo','Kitchen','Coffee Machines','Nespresso',4500],['HP Laptop 15"','Electronics','Laptops','HP',25999],['Instant Pot 6Qt','Kitchen','Pressure Cookers','Instant Pot',3299]]},
+
+  // AUTOMOTIVE
+  'petromin':    {ind:'auto', country:'Egypt', currency:'EGP', stores:['Petromin Maadi','Petromin Nasr City','Petromin New Cairo','Petromin 6th October'], products:[['Engine Oil 5W-30 4L','Lubricants','Engine Oil','Mobil',450],['Engine Oil 10W-40 4L','Lubricants','Engine Oil','Castrol',420],['Car Battery 70Ah','Electrical','Batteries','Exide',2200],['Air Filter','Filters','Air Filter','Mann',180],['Oil Filter','Filters','Oil Filter','Bosch',95],['Spark Plug x4','Ignition','Spark Plugs','NGK',320],['Car Wash Service','Services','Washing','Petromin',150],['Full Oil Change Service','Services','Oil Change','Petromin',650],['Tire Rotation Service','Services','Tires','Petromin',250],['AC Service','Services','Air Conditioning','Petromin',850]]},
+};
+
+// ─── GENERIC INDUSTRY DATA (fallback) ────────────────────
+const genericData = {
+  retail: {stores:['Branch Maadi','Branch Nasr City','Branch Heliopolis','Branch New Cairo','Branch Zamalek','Branch Mohandessin'], products:[['Product A1','Beverages','Soft Drinks','Brand A',25],['Product A2','Beverages','Water','Brand B',10],['Product A3','Snacks','Chips','Brand C',18],['Product A4','Snacks','Chocolate','Brand D',22],['Product A5','Dairy','Milk','Brand E',30],['Product A6','Tobacco','Cigarettes','Brand F',45],['Product A7','Household','Cleaning','Brand G',55],['Product A8','Personal Care','Hygiene','Brand H',40],['Product A9','Hot Drinks','Coffee','Brand I',12],['Product A10','Telecom','Recharge','Brand J',10]]},
+  fnb: {stores:['Branch Maadi','Branch Nasr City','Branch Heliopolis','Branch New Cairo','Branch Zamalek'], products:[['Classic Burger','Burgers','Beef',120],['Chicken Sandwich','Chicken','Sandwiches',95],['French Fries Large','Sides','Fries',45],['Soft Drink Large','Beverages','Soft Drinks',30],['Chocolate Shake','Beverages','Milkshakes',65],['Caesar Salad','Salads','Classic',70],['Grilled Wrap','Chicken','Wraps',85],['Ice Cream Sundae','Desserts','Ice Cream',50],['Pasta Arabiata','Pasta','Italian',95],['Kids Meal','Kids','Combo',85]].map(p=>[p[0],p[1],p[2],'House Brand',p[3]])},
+  telecom: {stores:['Branch Maadi','Branch Nasr City','Branch Heliopolis','Branch New Cairo'], products:[['SIM Card','SIM Cards','Prepaid','Brand',10],['Data 2GB','Data Bundles','Daily','Brand',18],['Data 10GB','Data Bundles','Weekly','Brand',55],['Data 30GB','Data Bundles','Monthly','Brand',140],['Recharge 50','Recharge','Mid','Brand',50],['Recharge 100','Recharge','High','Brand',100],['Power Bank','Accessories','Power','Brand',350],['USB Cable','Accessories','Cables','Brand',65],['Screen Protector','Accessories','Protection','Brand',80],['Phone Case','Accessories','Cases','Brand',120]]},
+  pharmacy: {stores:['Branch Maadi','Branch Nasr City','Branch Heliopolis','Branch New Cairo'], products:[['Paracetamol 500mg','Pain Relief','Paracetamol','Generic',18],['Ibuprofen 400mg','Pain Relief','Ibuprofen','Generic',28],['Antacid Tablets','GI','Antacids','Generic',22],['Vitamin C 500mg','Vitamins','Vitamin C','Generic',60],['Multivitamin x30','Vitamins','Multivitamin','Generic',95],['Antiseptic 250ml','Antiseptics','Liquid','Generic',45],['Bandages x20','First Aid','Bandages','Generic',30],['Eye Drops 10ml','Eye Care','Drops','Generic',55],['Nasal Spray','Respiratory','Sprays','Generic',85],['Antifungal Cream','Dermatology','Topical','Generic',75]]},
+  fashion: {stores:['Branch City Stars','Branch Mall of Arabia','Branch Maadi','Branch Heliopolis'], products:[['T-Shirt M','Tops','T-Shirts','House',199],['Jeans 32','Bottoms','Jeans','House',549],['Dress S','Dresses','Casual','House',399],['Jacket M','Outerwear','Jackets','House',899],['Sneakers 42','Footwear','Sneakers','House',799],['Belt M','Accessories','Belts','House',220],['Cap','Accessories','Hats','House',180],['Bag','Bags','Tote','House',450],['Shorts M','Bottoms','Shorts','House',249],['Hoodie L','Tops','Hoodies','House',449]]},
+  ecommerce: {stores:['Online - Cairo','Online - Giza','Online - Alexandria','Online - Nationwide'], products:[['Electronics Item A','Electronics','Gadgets','Brand A',1299],['Electronics Item B','Electronics','Accessories','Brand B',450],['Fashion Item A','Fashion','Clothing','Brand C',399],['Home Item A','Home','Kitchen','Brand D',899],['Sports Item A','Sports','Equipment','Brand E',750],['Beauty Item A','Beauty','Skincare','Brand F',320],['Book A','Books','Non-Fiction','Brand G',85],['Toy A','Toys','Kids','Brand H',550],['Food Item A','Food','Groceries','Brand I',95],['Health Item A','Health','Vitamins','Brand J',220]]},
+  auto: {stores:['Workshop Maadi','Workshop Nasr City','Workshop New Cairo','Workshop Heliopolis'], products:[['Engine Oil 4L','Lubricants','Oil','Brand',420],['Oil Filter','Filters','Oil Filter','Brand',90],['Air Filter','Filters','Air','Brand',175],['Car Battery','Electrical','Battery','Brand',2100],['Spark Plugs x4','Ignition','Plugs','Brand',280],['Car Wash','Services','Washing','Brand',150],['Oil Change Service','Services','Maintenance','Brand',600],['Tire Rotation','Services','Tires','Brand',250],['AC Service','Services','Cooling','Brand',850],['Brake Pads','Brakes','Pads','Brand',680]]},
+};
+
+// ─── HELPERS ─────────────────────────────────────────────
+function getRand(arr){return arr[Math.floor(Math.random()*arr.length)]}
+function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+function randFloat(a,b,d=2){return parseFloat((Math.random()*(b-a)+a).toFixed(d))}
+function pad(n){return String(n).padStart(2,'0')}
+function randDate(y1,m1,y2,m2){
+  const d1=new Date(y1,m1-1,1),d2=new Date(y2,m2-1,28);
+  const ms=d1.getTime()+Math.random()*(d2.getTime()-d1.getTime());
+  const d=new Date(ms);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+function badDate(d){// intentionally wrong format
+  const p=d.split('-');return `${p[2]}/${p[1]}/${p[0]}`;
+}
+function weekDay(dateStr){return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date(dateStr).getDay()]}
+function monthName(dateStr){return ['January','February','March','April','May','June','July','August','September','October','November','December'][new Date(dateStr).getMonth()]}
+function quarter(dateStr){return 'Q'+Math.ceil((new Date(dateStr).getMonth()+1)/3)}
+function shift(){const h=randInt(0,23);return h<14&&h>=6?'Morning':h<22?'Afternoon':'Night'}
+
+// ─── GET COMPANY DATA ─────────────────────────────────────
+function getCompanyData(name, ind) {
+  const key = name.toLowerCase().trim();
+  // try exact match
+  if(companyDB[key]) return companyDB[key];
+  // try partial match
+  for(const k of Object.keys(companyDB)){
+    if(key.includes(k)||k.includes(key)) return companyDB[k];
+  }
+  // fallback to generic
+  return {...genericData[ind]||genericData.retail, ind};
+}
+
+// ─── GENERATE CSV ─────────────────────────────────────────
+function generateCSV(company, ind, rows, level) {
+  const name = company || 'Company';
+  const data = getCompanyData(name, ind);
+  const products = data.products;
+  const stores = data.stores;
+  const cur = data.currency || 'EGP';
+  const regions = ['Greater Cairo','Alexandria','Delta','Upper Egypt','Sinai'];
+  const payMethods = ['Cash','Card','Digital Wallet'];
+  const segments = ['New','Regular','VIP'];
+  const channels = ['In-Store','Online','App'];
+  const discTypes = ['None','Percentage','Loyalty','Promo Code'];
+  const returnReasons = ['Defective','Wrong Item','Changed Mind','Expired','Not As Described'];
+  const promoCodes = ['SAVE10','HAPPY20','SUMMER15','MEGA25','LOYALTY5','NONE','NONE','NONE'];
+  const genders = ['Male','Female'];
+
+  // noise injection config
+  const nullRate = level==='beginner'?0.04:level==='intermediate'?0.06:0.05;
+  const dupeCount = level==='beginner'?2:level==='intermediate'?3:5;
+  const badDateCount = level==='beginner'?1:level==='intermediate'?2:3;
+  const negQtyCount = level==='beginner'?1:1;
+  const badCalcCount = level==='intermediate'?3:level==='advanced'?4:0;
+
+  // pick columns per level
+  let header;
+  if(level==='beginner'){
+    header='Transaction_ID,Date,Product_Name,Category,Quantity,Unit_Price,Total_Sales,Store_Location,Payment_Method,Customer_Age';
+  } else if(level==='intermediate'){
+    header='Transaction_ID,Date,Time,Week_Day,Product_Name,Category,Sub_Category,Brand,Quantity,Unit_Price,Discount_Pct,Total_Revenue,Store_ID,Store_Location,Region,Payment_Method,Cashier_ID,Customer_ID,Customer_Age,Loyalty_Member,Return_Flag';
+  } else {
+    header='Transaction_ID,Date,Time,Week_Day,Month_Name,Quarter,Year,Product_ID,Product_Name,Brand,Category,Sub_Category,Quantity,Unit_Cost,Unit_Price,Gross_Margin_Pct,Discount_Type,Discount_Pct,Net_Unit_Price,Total_Revenue,Total_Cost,Net_Profit,Store_ID,Store_Name,City,Region,Shift,Cashier_ID,Payment_Method,Customer_ID,Customer_Segment,Customer_Age,Customer_Gender,Loyalty_Points_Earned,Return_Flag,Return_Reason,Promo_Code,Channel';
+  }
+
+  const lines = [header];
+  const dupeIdxs = new Set();
+  while(dupeIdxs.size < Math.min(dupeCount, rows/5)) dupeIdxs.add(randInt(5, rows-2));
+  const badDateIdxs = new Set();
+  while(badDateIdxs.size < Math.min(badDateCount, rows/10)) badDateIdxs.add(randInt(rows-10, rows-1));
+  const negQtyIdxs = new Set();
+  while(negQtyIdxs.size < negQtyCount) negQtyIdxs.add(randInt(10, rows-2));
+  const badCalcIdxs = new Set();
+  while(badCalcIdxs.size < badCalcCount) badCalcIdxs.add(randInt(5, rows-3));
+  const futureIdxs = new Set();
+  if(level==='advanced') while(futureIdxs.size < 3) futureIdxs.add(randInt(rows-10, rows-1));
+
+  // seasonal weight: month -> weight
+  const mw=[0.7,0.75,0.85,0.9,0.9,0.95,1.0,1.0,0.95,1.1,1.2,1.4];
+  const dowBoost=[1,0.7,0.75,0.8,0.85,1.5,1.6]; // Sun-Sat
+
+  let dupeSrc = null;
+
+  for(let i=0;i<rows;i++){
+    let dateStr;
+    if(futureIdxs.has(i)){
+      dateStr='2025-'+pad(randInt(1,6))+'-'+pad(randInt(1,28));
+    } else if(level==='advanced'){
+      dateStr=randDate(2022,1,2023,12);
+    } else {
+      dateStr=randDate(2024,1,2024,12);
+    }
+
+    // seasonal qty boost
+    const mo=new Date(dateStr).getMonth();
+    const dow=new Date(dateStr).getDay();
+    const seaBoost=mw[mo]*dowBoost[dow];
+
+    const prod=getRand(products);
+    const pName=prod[0],pCat=prod[1],pSub=prod[2],pBrand=prod[3];
+    const basePrice=prod[4];
+    const up=parseFloat((basePrice*(0.9+Math.random()*0.2)).toFixed(2));
+
+    let qty=Math.max(1,Math.round(randInt(1,6)*seaBoost));
+    if(negQtyIdxs.has(i)) qty=-randInt(1,3);
+
+    const discPct=getRand([0,0,0,5,10,15,20]);
+    const netUp=parseFloat((up*(1-discPct/100)).toFixed(2));
+    const totalRev=badCalcIdxs.has(i)?parseFloat((netUp*qty*1.5).toFixed(2)):parseFloat((netUp*qty).toFixed(2));
+    const costPct=randFloat(0.45,0.65);
+    const unitCost=parseFloat((up*costPct).toFixed(2));
+    const totalCost=parseFloat((unitCost*qty).toFixed(2));
+    const netProfit=parseFloat((totalRev-totalCost).toFixed(2));
+    const grossMargin=parseFloat(((up-unitCost)/up*100).toFixed(1));
+
+    const storeIdx=randInt(0,stores.length-1);
+    const storeName=stores[storeIdx];
+    const storeId='STR-'+pad(storeIdx+1);
+    const region=getRand(regions);
+    const city=storeName.split(' ').slice(-1)[0]||'Cairo';
+    const pay=getRand(payMethods);
+    const cashier='EMP-'+pad(randInt(1,15));
+    const custId=Math.random()<nullRate?'':('C-'+randInt(10000,99999));
+    const custAge=Math.random()<nullRate?'':randInt(18,65);
+    const custGender=Math.random()<nullRate?'':getRand(genders);
+    const loyalty=Math.random()<0.35?'Yes':'No';
+    const segment=Math.random()<0.6?'New':Math.random()<0.75?'Regular':'VIP';
+    const loyaltyPts=loyalty==='Yes'?randInt(5,200):0;
+    const ret=Math.random()<0.04?'Yes':'No';
+    // ret reason: bug in some rows where ret=No but reason filled
+    const retReason= (ret==='Yes'||level==='advanced'&&Math.random()<0.015)?getRand(returnReasons):'';
+    const promo=getRand(promoCodes);
+    const chan=getRand(['In-Store','In-Store','In-Store','Online','App']);
+    const shft=shift();
+    const timeH=shft==='Morning'?randInt(6,13):shft==='Afternoon'?randInt(14,21):randInt(22,23)||randInt(0,5);
+    const timeStr=pad(timeH)+':'+pad(randInt(0,59));
+    const txnId='TXN-'+String(i+1001).padStart(5,'0');
+    const prodId='PRD-'+pad(storeIdx+1)+'-'+pad(products.indexOf(prod)+1);
+
+    // category casing variation for advanced
+    let catDisp=pCat;
+    if(level==='advanced'&&Math.random()<0.05) catDisp=pCat.toUpperCase();
+    else if(level==='advanced'&&Math.random()<0.05) catDisp=pCat.toLowerCase();
+
+    // price outlier
+    let upDisplay=up;
+    if(level==='advanced'&&Math.random()<0.004) upDisplay=parseFloat((up*10).toFixed(2));
+
+    let row='';
+    let finalDate=badDateIdxs.has(i)?badDate(dateStr):dateStr;
+    // dupe handling
+    if(dupeIdxs.has(i)&&lines.length>2){
+      dupeSrc=lines[randInt(1,lines.length-1)];
+      lines.push(dupeSrc);
+      continue;
+    }
+
+    if(level==='beginner'){
+      row=[txnId,finalDate,pName,pCat,qty,up,Math.abs(qty)*up,storeName,pay,custAge].join(',');
+    } else if(level==='intermediate'){
+      row=[txnId,finalDate,timeStr,weekDay(dateStr),pName,catDisp,pSub,pBrand,qty,up,discPct,totalRev,storeId,storeName,region,pay,cashier,custId,custAge,loyalty,ret].join(',');
+    } else {
+      const yr=new Date(dateStr).getFullYear();
+      row=[txnId,finalDate,timeStr,weekDay(dateStr),monthName(dateStr),quarter(dateStr),yr,prodId,pName,pBrand,catDisp,pSub,qty,unitCost,upDisplay,grossMargin,discPct>0?getRand(['Percentage','Promo Code']):'None',discPct,netUp,totalRev,totalCost,netProfit,storeId,storeName,city,region,shft,cashier,pay,custId||'',segment,custAge,custGender,loyaltyPts,ret,retReason,promo,chan].join(',');
+    }
+    lines.push(row);
+  }
+  return lines.join('\n');
+}
+
+// ─── UI FUNCTIONS ────────────────────────────────────────
+function pickRows(e, lv, rows){
+  e.stopPropagation();
+  selRows = rows;
+  // update buttons only within this level's wrap
+  document.querySelectorAll(`#rows-${lv} .lrow-btn`).forEach(b => b.classList.toggle('on', +b.dataset.rows === rows));
+  // update badge
+  document.getElementById('lb-'+lv).textContent = rows.toLocaleString()+' صف';
+}
+
+function setInd(i){ selInd=i; document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p.dataset.ind===i)); }
+function setRows(r){
+  selRows=r;
+  document.querySelectorAll('.row-btn').forEach(b=>b.classList.toggle('on',+b.dataset.rows===r));
+}
+function setLv(lv){
+  selLv=lv;
+  selRows=lvCfg[lv].defaultRows;
+  const cfg=lvCfg[lv];
+  document.querySelectorAll('.lcard').forEach(c=>{
+    const l=c.dataset.lv, lc=lvCfg[l];
+    c.className='lcard'+(l===lv?' '+cfg.cls:'');
+    document.getElementById('r-'+l).style.borderColor=l===lv?lc.color:'#2d3748';
+    document.getElementById('d-'+l).style.display=l===lv?'block':'none';
+    const nm=c.querySelector('.lname');
+    if(nm) nm.style.color=l===lv?lc.color:'#e8edf5';
+    const lb=document.getElementById('lb-'+l);
+    lb.style.color=l===lv?lc.color:'#4a5568';
+    lb.style.borderColor=l===lv?lc.border:'rgba(255,255,255,0.05)';
+    lb.style.background=l===lv?lc.glow:'rgba(255,255,255,0.03)';
+  });
+  // sync the row buttons to the default for this level
+  document.querySelectorAll(`#rows-${lv} .lrow-btn`).forEach(b=>{
+    b.classList.toggle('on', +b.dataset.rows === selRows);
+  });
+  document.getElementById('lb-'+lv).textContent = selRows.toLocaleString()+' صف';
+}
+
+function renderTable(csv){
+  const lines=csv.trim().split('\n').filter(l=>l.trim());
+  if(lines.length<2) return '<p style="padding:16px;color:#4a5568;text-align:center">لا توجد بيانات</p>';
+  const headers=lines[0].split(',');
+  const previewRows=lines.slice(1,16);
+  let html='<table><thead><tr>';
+  headers.forEach(h=>{ html+=`<th>${h.trim()}</th>`; });
+  html+='</tr></thead><tbody>';
+  previewRows.forEach(row=>{
+    const cells=row.split(',');
+    html+='<tr>';
+    cells.forEach(cell=>{
+      const v=cell.trim();
+      const empty=v===''||v.toLowerCase()==='null';
+      html+=`<td class="${empty?'nc':''}">${empty?'NULL ⚠️':v}</td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  return html;
+}
+
+async function generate(){
+  const company=document.getElementById('companyInput').value.trim();
+  const btn=document.getElementById('genBtn');
+  const err=document.getElementById('errBox');
+  const rc=document.getElementById('resultCard');
+  const pw=document.getElementById('progressWrap');
+  const pf=document.getElementById('progressFill');
+  const pl=document.getElementById('progressLabel');
+
+  err.style.display='none'; rc.style.display='none';
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> جاري التوليد...';
+  pw.style.display='block'; pf.style.width='0%'; pl.textContent='جاري توليد البيانات...';
+
+  // animate progress
+  let prog=0;
+  const totalTime=selRows<1000?600:selRows<5000?1200:selRows<10000?2000:3500;
+  const interval=setInterval(()=>{prog=Math.min(prog+randInt(3,8),88);pf.style.width=prog+'%';},totalTime/30);
+
+  try {
+    // yield to browser then generate
+    await new Promise(r=>setTimeout(r,50));
+    const steps=['جاري تحليل بيانات الشركة...','جاري توليد المعاملات...','جاري إضافة الأنماط الموسمية...','جاري تضمين بيانات التنظيف...','جاري تجهيز الملف...'];
+    let si=0;
+    const stepInt=setInterval(()=>{pl.textContent=steps[si++%steps.length];},totalTime/5);
+
+    await new Promise(r=>setTimeout(r,totalTime));
+    clearInterval(stepInt);
+
+    csvData=generateCSV(company,selInd,selRows,selLv);
+
+    clearInterval(interval); pf.style.width='100%'; pl.textContent='✅ اكتمل التوليد!';
+
+    const cfg=lvCfg[selLv];
+    const lines=csvData.split('\n').filter(l=>l.trim());
+    const rowCount=lines.length-1;
+    const lvLabel={beginner:'مبتدئ',intermediate:'متوسط',advanced:'متقدم'}[selLv];
+    const compMatch=getCompanyData(company||'generic',selInd);
+    const isRealCompany=company&&companyDB[company.toLowerCase().trim()]?'✅ بيانات حقيقية':'⚡ بيانات مخصصة';
+
+    document.getElementById('rdot2').style.cssText=`background:${cfg.color};box-shadow:0 0 8px ${cfg.color}`;
+    document.getElementById('rTitle').style.color=cfg.color;
+    document.getElementById('rTitle').textContent=`${company||'Dataset'} · ${lvLabel} · ${rowCount.toLocaleString()} صف`;
+    document.getElementById('rMeta').textContent=isRealCompany;
+    rc.style.border=`1px solid ${cfg.border}`;
+    rc.style.boxShadow=`0 0 40px ${cfg.glow}`;
+    document.getElementById('tblWrap').innerHTML=renderTable(csvData);
+
+    const mr=document.getElementById('moreRows');
+    if(rowCount>15){mr.style.display='block';mr.textContent=`عرض أول 15 صف من أصل ${rowCount.toLocaleString()} صف كامل`;}
+    else mr.style.display='none';
+
+    const dl=document.getElementById('dlBtn');
+    dl.style.color=cfg.color; dl.style.borderColor=cfg.border; dl.style.background=cfg.glow;
+
+    rc.style.display='block';
+    setTimeout(()=>rc.scrollIntoView({behavior:'smooth',block:'start'}),100);
+    pw.style.display='none';
+  } catch(e){
+    clearInterval(interval); pw.style.display='none';
+    err.textContent='⚠️ حدث خطأ أثناء التوليد: '+e.message;
+    err.style.display='block';
+  } finally {
+    btn.disabled=false; btn.textContent='🚀 ولّد الـ Dataset الآن';
+  }
+}
+
+function copyCSV(){
+  if(!csvData) return;
+  navigator.clipboard.writeText(csvData).then(()=>{
+    const b=document.getElementById('copyBtn');
+    b.textContent='✅ تم النسخ!'; b.classList.add('ok');
+    setTimeout(()=>{b.textContent='📋 نسخ CSV';b.classList.remove('ok');},2500);
+  });
+}
+
+function dlCSV(){
+  if(!csvData) return;
+  const company=document.getElementById('companyInput').value.trim()||'sales';
+  const blob=new Blob([csvData],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`${company}_${selInd}_${selLv}_${selRows}rows.csv`;
+  a.click(); URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
