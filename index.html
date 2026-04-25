@@ -579,13 +579,20 @@ async function generate(){
   btn.disabled=true; btn.innerHTML='<span class="spin"></span> جاري التوليد...';
   pw.style.display='block'; pf.style.width='0%'; pl.textContent='جاري توليد البيانات...';
 
-  // animate progress
+  // auto-detect industry from company name
+  const key=company.toLowerCase().trim();
+  if(companyDB[key]) selInd=companyDB[key].ind||'retail';
+  else {
+    for(const k of Object.keys(companyDB)){
+      if(key.includes(k)||k.includes(key)){selInd=companyDB[k].ind||'retail';break;}
+    }
+  }
+
   let prog=0;
   const totalTime=selRows<1000?600:selRows<5000?1200:selRows<10000?2000:3500;
   const interval=setInterval(()=>{prog=Math.min(prog+randInt(3,8),88);pf.style.width=prog+'%';},totalTime/30);
 
   try {
-    // yield to browser then generate
     await new Promise(r=>setTimeout(r,50));
     const steps=['جاري تحليل بيانات الشركة...','جاري توليد المعاملات...','جاري إضافة الأنماط الموسمية...','جاري تضمين بيانات التنظيف...','جاري تجهيز الملف...'];
     let si=0;
@@ -602,8 +609,7 @@ async function generate(){
     const lines=csvData.split('\n').filter(l=>l.trim());
     const rowCount=lines.length-1;
     const lvLabel={beginner:'مبتدئ',intermediate:'متوسط',advanced:'متقدم'}[selLv];
-    const compMatch=getCompanyData(company||'generic',selInd);
-    const isRealCompany=company&&companyDB[company.toLowerCase().trim()]?'✅ بيانات حقيقية':'⚡ بيانات مخصصة';
+    const isRealCompany=company&&companyDB[key]?'✅ بيانات حقيقية':'⚡ بيانات مخصصة';
 
     document.getElementById('rdot2').style.cssText=`background:${cfg.color};box-shadow:0 0 8px ${cfg.color}`;
     document.getElementById('rTitle').style.color=cfg.color;
@@ -625,8 +631,9 @@ async function generate(){
     pw.style.display='none';
   } catch(e){
     clearInterval(interval); pw.style.display='none';
-    err.textContent='⚠️ حدث خطأ أثناء التوليد: '+e.message;
+    err.textContent='⚠️ خطأ: '+e.message;
     err.style.display='block';
+    console.error(e);
   } finally {
     btn.disabled=false; btn.textContent='🚀 ولّد الـ Dataset الآن';
   }
